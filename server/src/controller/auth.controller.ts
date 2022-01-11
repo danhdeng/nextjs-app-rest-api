@@ -7,11 +7,12 @@ import {
     findSessionById,
     signAccessToken,
     singRefreshToken,
+    createSession,
 } from '../service/auth.service';
 
 import { findUserByEmail, findUserById } from '../service/user.service';
 
-import { verifyJwt } from '../utils/jwt.utils';
+import { signJwt, verifyJwt } from '../utils/jwt.utils';
 
 export const createSessionHandler = async (
     req: Request<{}, {}, CreateSessionInput>,
@@ -19,7 +20,7 @@ export const createSessionHandler = async (
 ) => {
     const message = 'Invalid email or password';
     const { email, password } = req.body;
-
+    console.log(req.body);
     const user = await findUserByEmail(email);
     if (!user) {
         return res.send(message);
@@ -33,10 +34,43 @@ export const createSessionHandler = async (
         return res.send(message);
     }
 
-    const accessToken = signAccessToken(user);
+    // create a session
+    const session = await createSession(user._id);
 
-    const refreshToken = await singRefreshToken({ userId: user._id });
-    return res.send({
+    // create an access token
+
+    const accessToken = signJwt(
+        { ...user, session: session._id },
+        'accessTokenPrivateKey',
+        { expiresIn: '15m' } // 15 minutes
+    );
+
+    // create a refresh token
+    const refreshToken = signJwt(
+        { ...user, session: session._id },
+        'refreshTokenPrivateKey',
+        { expiresIn: '30d' } // 15 minutes
+    );
+
+    res.cookie('access_token', accessToken, {
+        maxAge: 900000,
+        httpOnly: true,
+        domain: 'localhost',
+        path: '/',
+        sameSite: 'strict',
+        secure: false,
+    });
+
+    res.cookie('refresh_token', refreshToken, {
+        maxAge: 900000,
+        httpOnly: true,
+        domain: 'localhost',
+        path: '/',
+        sameSite: 'strict',
+        secure: false,
+    });
+    console.log(refreshToken);
+    return res.status(201).json({
         accessToken,
         refreshToken,
     });
@@ -45,14 +79,11 @@ export const createSessionHandler = async (
 export const refreshSessionHandler = async (req: Request, res: Response) => {
     const refreshToken = get(req, 'headers.x-refresh');
 
-    const decoded = verifyJwt<{ session: string }>(
-        refreshToken,
-        'refreshTokenPublicKey'
-    );
+    const { decoded } = verifyJwt(refreshToken, 'refreshTokenPublicKey');
     if (!decoded) {
         return res.status(401).send('Could not refresh access token');
     }
-    const session = await findSessionById(decoded.session);
+    const session = await findSessionById(get(decoded, 'session'));
     if (!session || !session.valid) {
         return res.status(401).send('Could not refresh access token');
     }

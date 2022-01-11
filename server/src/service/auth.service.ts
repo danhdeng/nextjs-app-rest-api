@@ -3,12 +3,12 @@ import SessionModel, { Session } from '../models/session.model';
 import { privateFields, User } from '../models/user.model';
 import { omit } from 'lodash';
 import log from '../utils/logger';
-
-import { signJwt } from '../utils/jwt.utils';
+import { get } from 'lodash';
+import { findUserById } from './user.service';
+import { signJwt, verifyJwt } from '../utils/jwt.utils';
 
 export const createSession = async ({ userId }: { userId: string }) => {
     const session = await SessionModel.create({ user: userId });
-    log.info(session.toJSON());
     return session.toJSON();
 };
 
@@ -36,5 +36,27 @@ export const signAccessToken = (user: DocumentType<User>) => {
     const accessToken = signJwt(payload, 'accessTokenPrivateKey', {
         expiresIn: '15m',
     });
+    return accessToken;
+};
+
+export const reIssueAccessToken = async ({
+    refreshToken,
+}: {
+    refreshToken: string;
+}) => {
+    const { decoded } = verifyJwt(refreshToken, 'refreshTokenPublicKey');
+    if (!decoded || get(decoded, 'session')) return false;
+    const session = await SessionModel.findById(get(decoded, 'session'));
+
+    if (!session || !session.valid) return false;
+
+    const user = await findUserById(String(session.user));
+    if (!user) return false;
+
+    const accessToken = signJwt(
+        { ...user, session: session._id },
+        'accessTokenPrivateKey',
+        { expiresIn: '15m' }
+    );
     return accessToken;
 };

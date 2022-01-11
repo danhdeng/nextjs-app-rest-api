@@ -51,6 +51,7 @@ export default function RegisterPage() {
                 `${process.env.NEXT_PUBLIC_SERVER_ENDPOINT}/api/users`,
                 values
             );
+            router.push('/');
         } catch (error: any) {
             setRegisterError(error?.message);
         }

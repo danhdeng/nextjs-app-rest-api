@@ -5,6 +5,7 @@ import log from './utils/logger';
 import deserializeUser from './middleware/deserializeUser';
 import cors from 'cors';
 import config from 'config';
+import cookieParser from 'cookie-parser';
 
 class App {
     public express: Application;
@@ -17,6 +18,7 @@ class App {
         this.intializeRoutes(routes);
     }
     private initializeMiddleware() {
+        this.express.use(cookieParser());
         this.express.use(
             cors({
                 origin: config.get('origin'),
