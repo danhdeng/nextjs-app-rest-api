@@ -3,6 +3,8 @@ import connectDB from './utils/connect';
 import IRoute from './interface/route.interface';
 import log from './utils/logger';
 import deserializeUser from './middleware/deserializeUser';
+import cors from 'cors';
+import config from 'config';
 
 class App {
     public express: Application;
@@ -15,6 +17,12 @@ class App {
         this.intializeRoutes(routes);
     }
     private initializeMiddleware() {
+        this.express.use(
+            cors({
+                origin: config.get('origin'),
+                credentials: true,
+            })
+        );
         this.express.use(express.json());
         this.express.use(deserializeUser);
     }
