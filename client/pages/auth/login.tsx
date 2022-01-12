@@ -40,9 +40,8 @@ export default function LoginPage() {
 
     const submitHandler = async (values: LoginUserInput) => {
         try {
-            //console.log({ values });
             await ax.post(`/api/sessions`, values);
-            // router.push('/');
+            router.push('/');
         } catch (error: any) {
             setLoginError(error?.message);
         }
