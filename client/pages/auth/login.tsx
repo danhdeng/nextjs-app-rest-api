@@ -36,18 +36,12 @@ export default function LoginPage() {
     } = useForm<LoginUserInput>({
         resolver: zodResolver(loginUserSchema),
     });
-    console.log(errors);
+    //console.log(errors);
 
     const submitHandler = async (values: LoginUserInput) => {
         try {
             //console.log({ values });
-            await ax.post(`/api/sessions`, values, {
-                withCredentials: true,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Content-Type': 'application/json',
-                },
-            });
+            await ax.post(`/api/sessions`, values);
             // router.push('/');
         } catch (error: any) {
             setLoginError(error?.message);
