@@ -2,11 +2,11 @@ import jwt from 'jsonwebtoken';
 import config from 'config';
 import log from './logger';
 
-type Token = {
-    valid: boolean;
-    expired: boolean;
-    decode: string | jwt.JwtPayload;
-};
+// type Token = {
+//     valid: boolean;
+//     expired: boolean;
+//     decode: string | jwt.JwtPayload;
+// };
 
 export const signJwt = (
     object: Object,

@@ -14,10 +14,71 @@ import { findUserByEmail, findUserById } from '../service/user.service';
 
 import { signJwt, verifyJwt } from '../utils/jwt.utils';
 
-export const createSessionHandler = async (
+// export const createSessionHandler = async (
+//     req: Request<{}, {}, CreateSessionInput>,
+//     res: Response
+// ) => {
+//     const message = 'Invalid email or password';
+//     const { email, password } = req.body;
+//     console.log(req.body);
+//     const user = await findUserByEmail(email);
+//     if (!user) {
+//         return res.send(message);
+//     }
+//     if (!user.verified) {
+//         return res.send('Pleaser verify your email');
+//     }
+
+//     const isValid = await user.validatePassword(password);
+//     if (!isValid) {
+//         return res.send(message);
+//     }
+
+//     // create a session
+//     const session = await createSession(user._id);
+
+//     // create an access token
+
+//     const accessToken = signJwt(
+//         { ...user, session: session._id },
+//         'accessTokenPrivateKey',
+//         { expiresIn: '15m' } // 15 minutes
+//     );
+
+//     // create a refresh token
+//     const refreshToken = signJwt(
+//         { ...user, session: session._id },
+//         'refreshTokenPrivateKey',
+//         { expiresIn: '30d' } // 15 minutes
+//     );
+
+//     res.cookie('access_token', accessToken, {
+//         maxAge: 900000,
+//         httpOnly: true,
+//         domain: 'localhost',
+//         path: '/',
+//         sameSite: 'strict',
+//         secure: false,
+//     });
+
+//     res.cookie('refresh_token', refreshToken, {
+//         maxAge: 900000,
+//         httpOnly: true,
+//         domain: 'localhost',
+//         path: '/',
+//         sameSite: 'strict',
+//         secure: false,
+//     });
+//     console.log(refreshToken);
+//     res.send({
+//         accessToken,
+//         refreshToken,
+//     });
+// };
+export async function createSessionHandler(
     req: Request<{}, {}, CreateSessionInput>,
     res: Response
-) => {
+) {
     const message = 'Invalid email or password';
     const { email, password } = req.body;
     console.log(req.body);
@@ -52,8 +113,10 @@ export const createSessionHandler = async (
         { expiresIn: '30d' } // 15 minutes
     );
 
-    res.cookie('access_token', accessToken, {
-        maxAge: 900000,
+    // return access & refresh tokens
+
+    res.cookie('accessToken', accessToken, {
+        maxAge: 900000, // 15 mins
         httpOnly: true,
         domain: 'localhost',
         path: '/',
@@ -61,20 +124,17 @@ export const createSessionHandler = async (
         secure: false,
     });
 
-    res.cookie('refresh_token', refreshToken, {
-        maxAge: 900000,
+    res.cookie('refreshToken', refreshToken, {
+        maxAge: 3.154e10, // 1 year
         httpOnly: true,
         domain: 'localhost',
         path: '/',
         sameSite: 'strict',
         secure: false,
     });
-    console.log(refreshToken);
-    return res.status(201).json({
-        accessToken,
-        refreshToken,
-    });
-};
+
+    return res.send({ accessToken, refreshToken });
+}
 
 export const refreshSessionHandler = async (req: Request, res: Response) => {
     const refreshToken = get(req, 'headers.x-refresh');

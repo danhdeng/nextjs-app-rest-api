@@ -1,8 +1,9 @@
-import express, { Application } from 'express';
+import express, { Application, NextFunction } from 'express';
 import connectDB from './utils/connect';
 import IRoute from './interface/route.interface';
 import log from './utils/logger';
 import deserializeUser from './middleware/deserializeUser';
+import setResponseHeader from './middleware/setResponseHeader';
 import cors from 'cors';
 import config from 'config';
 import cookieParser from 'cookie-parser';
@@ -18,16 +19,18 @@ class App {
         this.intializeRoutes(routes);
     }
     private initializeMiddleware() {
-        this.express.use(cookieParser());
         this.express.use(
             cors({
                 origin: config.get('origin'),
                 credentials: true,
             })
         );
+        this.express.use(cookieParser());
         this.express.use(express.json());
+        this.express.use(setResponseHeader);
         this.express.use(deserializeUser);
     }
+
     private intializeRoutes(routes: IRoute[]) {
         routes.forEach((route: IRoute) => {
             this.express.use('/api', route.router);

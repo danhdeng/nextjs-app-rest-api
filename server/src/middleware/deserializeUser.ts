@@ -9,11 +9,11 @@ const deserializeUser = async (
     next: NextFunction
 ) => {
     const accessToken =
-        get(req, 'cookies.access_token') ||
+        get(req, 'cookies.accessToken') ||
         (req.headers.authorization || '').replace(/^Bearer\s/, '');
 
     const refreshToken =
-        get(req, 'cookies.refresh_token') || get(req, 'headers.x-refresh');
+        get(req, 'cookies.refreshToken') || get(req, 'headers.x-refresh');
 
     if (!accessToken) {
         return next();
@@ -21,7 +21,7 @@ const deserializeUser = async (
     const { decoded, expired } = verifyJwt(accessToken, 'accessTokenPublicKey');
     if (decoded) {
         res.locals.user = decoded;
-        next();
+        return next();
     }
     if (expired && refreshToken) {
         const newAccessToken = await reIssueAccessToken(refreshToken);
@@ -36,7 +36,28 @@ const deserializeUser = async (
                 secure: false,
             });
         }
+        const result = verifyJwt(
+            newAccessToken as string,
+            'accessTokenPublicKey'
+        );
+
+        res.locals.user = result.decoded;
+        return next();
     }
+    return next();
+};
+
+const setResponseHeader = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    res.header('Access-Control-Allow-Origin', 'localhost');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept'
+    );
     return next();
 };
 

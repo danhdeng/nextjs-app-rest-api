@@ -21,6 +21,11 @@ const loginUserSchema = object({
 
 type LoginUserInput = TypeOf<typeof loginUserSchema>;
 
+const ax = axios.create({
+    baseURL: `${process.env.NEXT_PUBLIC_SERVER_ENDPOINT}`,
+    withCredentials: true,
+});
+
 export default function LoginPage() {
     const router = useRouter();
     const [loginError, setLoginError] = useState('');
@@ -36,12 +41,14 @@ export default function LoginPage() {
     const submitHandler = async (values: LoginUserInput) => {
         try {
             //console.log({ values });
-            await axios.post(
-                `${process.env.NEXT_PUBLIC_SERVER_ENDPOINT}/api/sessions`,
-                values,
-                { withCredentials: true }
-            );
-            router.push('/');
+            await ax.post(`/api/sessions`, values, {
+                withCredentials: true,
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Content-Type': 'application/json',
+                },
+            });
+            // router.push('/');
         } catch (error: any) {
             setLoginError(error?.message);
         }
