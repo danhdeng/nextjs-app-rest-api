@@ -7,6 +7,7 @@ import setResponseHeader from './middleware/setResponseHeader';
 import cors from 'cors';
 import config from 'config';
 import cookieParser from 'cookie-parser';
+import { shouldSendSameSiteNone } from 'should-send-same-site-none';
 
 class App {
     public express: Application;
@@ -20,16 +21,19 @@ class App {
     }
     private initializeMiddleware() {
         //this.express.use(setResponseHeader);
+        this.express.set('trust proxy', 1);
         this.express.use(
             cors({
-                origin: config.get('origin'),
+                origin: 'http://localhost:3000',
                 credentials: true,
-                exposedHeaders: ['set-cookie'],
             })
         );
         this.express.use(function (req, res, next) {
             // Website you wish to allow to connect
-            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader(
+                'Access-Control-Allow-Origin',
+                'http://localhost:3000'
+            );
             // Request methods you wish to allow
             res.setHeader(
                 'Access-Control-Allow-Methods',
@@ -47,6 +51,7 @@ class App {
             // Pass to next layer of middleware
             next();
         });
+        this.express.use(shouldSendSameSiteNone);
         this.express.use(cookieParser());
         this.express.use(express.json());
         this.express.use(deserializeUser);
