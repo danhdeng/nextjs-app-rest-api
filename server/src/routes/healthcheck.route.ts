@@ -9,6 +9,17 @@ class HealthcheckRoute implements IRoute {
         this.initializeRoute();
     }
 
+    /**
+     * @openapi
+     * /api/healthcheck:
+     *  get:
+     *     tags:
+     *     - Healthcheck
+     *     description: Responds if the app is up and running
+     *     responses:
+     *       200:
+     *         description: App is up and running
+     */
     private initializeRoute() {
         this.router.get(`${this.path}`, (req: Request, res: Response) => {
             return res.sendStatus(200);

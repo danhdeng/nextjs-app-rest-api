@@ -7,6 +7,7 @@ import setResponseHeader from './middleware/setResponseHeader';
 import cors from 'cors';
 import config from 'config';
 import cookieParser from 'cookie-parser';
+import swaggerDocs from './utils/swagger';
 // import { shouldSendSameSiteNone } from 'should-send-same-site-none';
 
 class App {
@@ -67,6 +68,7 @@ class App {
         this.express.listen(this.port, async () => {
             await connectDB();
             log.info(`application is running at http://localhost:${this.port}`);
+            swaggerDocs(this.express, this.port);
         });
     };
 }
